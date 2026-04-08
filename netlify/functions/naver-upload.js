@@ -14,10 +14,9 @@ exports.handler = async function (event) {
   const hashed = crypto.createHmac("sha256", CLIENT_SECRET).update(password).digest("base64");
   const encoded = encodeURIComponent(hashed);
 
-  const tokenRes = await fetch(
-    `https://api.commerce.naver.com/external/v1/oauth2/token?grant_type=client_credentials&type=SELF&account_id=${CLIENT_ID}&timestamp=${timestamp}&client_id=${CLIENT_ID}&client_secret_sign=${encoded}&redirect_uri=https://api.commerce.naver.com&client_secret=${CLIENT_SECRET}`,
-    { method: "POST" }
-  );
+  const tokenUrl = `https://api.commerce.naver.com/external/v1/oauth2/token?grant_type=client_credentials&type=SELF&account_id=${CLIENT_ID}&timestamp=${timestamp}&client_id=${CLIENT_ID}&client_secret_sign=${encoded}&redirect_uri=https://api.commerce.naver.com&client_secret=${CLIENT_SECRET}`;
+
+  const tokenRes = await fetch(tokenUrl, { method: "POST" });
   const tokenData = await tokenRes.json();
   const accessToken = tokenData.access_token;
 
