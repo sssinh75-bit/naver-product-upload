@@ -30,7 +30,7 @@ exports.handler = async function (event) {
     const timestamp = String(Date.now() - 3000);
     const password = CLIENT_ID + "_" + timestamp;
     const hashed = bcrypt.hashSync(password, CLIENT_SECRET);
-    const client_secret_sign = Buffer.from(hashed).toString("base64");
+   const client_secret_sign = Buffer.from(hashed).toString("base64url");
 
     const params = new URLSearchParams({
       client_id: CLIENT_ID,
