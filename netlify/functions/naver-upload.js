@@ -35,7 +35,7 @@ exports.handler = async function (event) {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body.product),
     }
   );
 
