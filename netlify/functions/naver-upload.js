@@ -18,9 +18,14 @@ exports.handler = async function (event) {
     const hashed = crypto.createHmac("sha256", CLIENT_SECRET).update(password).digest("base64");
     const encoded = encodeURIComponent(hashed);
 
-    const tokenUrl = "https://api.commerce.naver.com/external/v1/oauth2/token?grant_type=client_credentials&type=SELF&account_id=" + CLIENT_ID + "&timestamp=" + timestamp + "&client_id=" + CLIENT_ID + "&client_secret_sign=" + encoded + "&redirect_uri=https://api.commerce.naver.com&client_secret=" + CLIENT_SECRET;
+    const tokenUrl = "https://api.commerce.naver.com/external/v1/oauth2/token?grant_type=client_credentials&type=SELF&account_id=" + CLIENT_ID + "&timestamp=" + timestamp + "&client_secret_sign=" + encoded;
 
-    const tokenRes = await fetch(tokenUrl, { method: "POST" });
+    const tokenRes = await fetch(tokenUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    });
     const tokenData = await tokenRes.json();
 
     console.log("tokenData:", JSON.stringify(tokenData));
@@ -49,13 +54,4 @@ exports.handler = async function (event) {
     const productData = await productRes.json();
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify(productData),
-    };
-  } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
-    };
-  }
-};
+      headers: { "Acc
