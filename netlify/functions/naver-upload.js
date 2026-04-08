@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 
 exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
@@ -15,10 +15,10 @@ exports.handler = async function (event) {
 
     const timestamp = Date.now().toString();
     const password = CLIENT_ID + "_" + timestamp;
-    const hashed = crypto.createHmac("sha256", CLIENT_SECRET).update(password).digest("base64");
-    const encoded = encodeURIComponent(hashed);
+    const hashed = bcrypt.hashSync(password, CLIENT_SECRET);
+    const encoded = Buffer.from(hashed).toString("base64");
 
-    const tokenUrl = "https://api.commerce.naver.com/external/v1/oauth2/token?grant_type=client_credentials&type=SELF&account_id=" + CLIENT_ID + "&timestamp=" + timestamp + "&client_secret_sign=" + encoded;
+    const tokenUrl = "https://api.commerce.naver.com/external/v1/oauth2/token?grant_type=client_credentials&type=SELF&account_id=" + CLIENT_ID + "&timestamp=" + timestamp + "&client_secret_sign=" + encodeURIComponent(encoded);
 
     const tokenRes = await fetch(tokenUrl, {
       method: "POST",
