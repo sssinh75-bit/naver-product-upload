@@ -21,33 +21,28 @@ exports.handler = async function (event) {
     const CLIENT_ID = process.env.NAVER_CLIENT_ID;
     const CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
-    // 디버그: 환경변수 확인
     console.log("CLIENT_ID:", CLIENT_ID);
-    console.log("CLIENT_ID length:", CLIENT_ID ? CLIENT_ID.length : 0);
     console.log("CLIENT_SECRET:", CLIENT_SECRET);
-    console.log("CLIENT_SECRET length:", CLIENT_SECRET ? CLIENT_SECRET.length : 0);
 
     const timestamp = String(Date.now() - 3000);
     const password = CLIENT_ID + "_" + timestamp;
     const hashed = bcrypt.hashSync(password, CLIENT_SECRET);
-   const client_secret_sign = Buffer.from(hashed).toString("base64url");
+    const client_secret_sign = Buffer.from(hashed).toString("base64");
 
-    const params = new URLSearchParams({
-      client_id: CLIENT_ID,
-      timestamp: timestamp,
-      client_secret_sign: client_secret_sign,
-      grant_type: "client_credentials",
-      type: "SELF"
-    });
+    const reqBody = "client_id=" + encodeURIComponent(CLIENT_ID)
+      + "&timestamp=" + encodeURIComponent(timestamp)
+      + "&client_secret_sign=" + encodeURIComponent(client_secret_sign)
+      + "&grant_type=client_credentials"
+      + "&type=SELF";
 
-    console.log("params:", params.toString());
+    console.log("reqBody:", reqBody);
 
     const tokenRes = await fetch(
       "https://api.commerce.naver.com/external/v1/oauth2/token",
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params.toString()
+        body: reqBody
       }
     );
 
