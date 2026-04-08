@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 exports.handler = async function (event) {
   if (event.httpMethod === "OPTIONS") {
@@ -15,7 +15,7 @@ exports.handler = async function (event) {
     const timestamp = String(Date.now() - 3000);
     const password = CLIENT_ID + "_" + timestamp;
     const hashed = bcrypt.hashSync(password, CLIENT_SECRET);
-    const client_secret_sign = Buffer.from(hashed).toString("base64");
+    const client_secret_sign = Buffer.from(hashed, "utf-8").toString("base64");
     console.log("hashed:", hashed);
     console.log("sign:", client_secret_sign);
     const reqBody = "client_id=" + encodeURIComponent(CLIENT_ID)
@@ -23,7 +23,6 @@ exports.handler = async function (event) {
       + "&client_secret_sign=" + encodeURIComponent(client_secret_sign)
       + "&grant_type=client_credentials"
       + "&type=SELF";
-    console.log("reqBody:", reqBody);
     const tokenRes = await fetch("https://api.commerce.naver.com/external/v1/oauth2/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
