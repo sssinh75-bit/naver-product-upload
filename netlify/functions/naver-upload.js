@@ -35,7 +35,7 @@ exports.handler = async function (event) {
     if (!accessToken) {
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: "토큰 발급 실패", detail: tokenData }),
+        body: JSON.stringify({ error: "토큰 발급 실패", detail: tokenData })
       };
     }
 
@@ -45,13 +45,22 @@ exports.handler = async function (event) {
         method: "POST",
         headers: {
           Authorization: "Bearer " + accessToken,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(body.product),
+        body: JSON.stringify(body.product)
       }
     );
 
     const productData = await productRes.json();
     return {
       statusCode: 200,
-      headers: { "Acc
+      headers: { "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify(productData)
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message })
+    };
+  }
+};
