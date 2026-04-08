@@ -1,6 +1,18 @@
 const bcrypt = require("bcryptjs");
 
 exports.handler = async function (event) {
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "POST, OPTIONS"
+      },
+      body: ""
+    };
+  }
+
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
@@ -10,35 +22,45 @@ exports.handler = async function (event) {
     const CLIENT_ID = process.env.NAVER_CLIENT_ID;
     const CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
-    console.log("CLIENT_ID:", CLIENT_ID);
-    console.log("CLIENT_SECRET length:", CLIENT_SECRET ? CLIENT_SECRET.length : 0);
+    // 타임스탬프 (3초 전)
+    const timestamp = String(Date.now() - 3000);
 
-    const timestamp = Date.now().toString();
+    // bcrypt 서명 생성
     const password = CLIENT_ID + "_" + timestamp;
     const hashed = bcrypt.hashSync(password, CLIENT_SECRET);
-    const encoded = Buffer.from(hashed).toString("base64");
+    const client_secret_sign = Buffer.from(hashed).toString("base64");
 
-    const tokenUrl = "https://api.commerce.naver.com/external/v1/oauth2/token?grant_type=client_credentials&type=SELF&account_id=" + CLIENT_ID + "&timestamp=" + timestamp + "&client_secret_sign=" + encodeURIComponent(encoded);
-
-    const tokenRes = await fetch(tokenUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
+    // 토큰 발급 (body로 전송)
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID,
+      timestamp: timestamp,
+      client_secret_sign: client_secret_sign,
+      grant_type: "client_credentials",
+      type: "SELF"
     });
-    const tokenData = await tokenRes.json();
 
+    const tokenRes = await fetch(
+      "https://api.commerce.naver.com/external/v1/oauth2/token",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      }
+    );
+
+    const tokenData = await tokenRes.json();
     console.log("tokenData:", JSON.stringify(tokenData));
 
     const accessToken = tokenData.access_token;
-
     if (!accessToken) {
       return {
         statusCode: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
         body: JSON.stringify({ error: "토큰 발급 실패", detail: tokenData })
       };
     }
 
+    // 상품 등록
     const productRes = await fetch(
       "https://api.commerce.naver.com/external/v2/products",
       {
@@ -57,9 +79,11 @@ exports.handler = async function (event) {
       headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify(productData)
     };
+
   } catch (err) {
     return {
       statusCode: 500,
+      headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({ error: err.message })
     };
   }
